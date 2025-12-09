@@ -1,0 +1,350 @@
+# Unified Bioresource Pipeline Configuration
+# Version: 1.1.0
+# Date: 2025-11-20
+# Updated: 2025-11-26 (Added phase 8/9, synced critical fixes from pipeline_synthesis)
+
+# =============================================================================
+# INPUT CONFIGURATION
+# =============================================================================
+input:
+  epmc_query_file: "../data/final_query_v5.1_2022_mid2025/query_results.csv"
+  total_papers: 98571
+  date_range: "2022-mid2025"
+  query_version: "v5.1"
+
+# =============================================================================
+# PHASE 1: CLASSIFICATION (V2 RoBERTa + PyCaret)
+# =============================================================================
+classification:
+  v2:
+    model_path: "../out/original_model/article_classifier.pt"
+    model_type: "RobertaForSequenceClassification"
+    max_length: 512  # Notebook uses 512, script uses 256
+    batch_size: 16
+    device: "cuda"
+    threshold: 0.5
+    expected_positives: 12285  # ~8.2%
+
+  pycaret:
+    model_path: "../pycaret_models/test_mode_true/pycaret_metadata_classifier_v1.pkl"
+    test_mode: true
+    n_features: 91  # Engineered features
+    expected_positives: 45766  # ~30.6%
+
+  union:
+    logic: "OR"  # V2 positive OR PyCaret positive
+    expected_total: 50192  # ~33.5%
+    output_file: "data/phase1_classification/union_50k.csv"
+
+# =============================================================================
+# PHASE 2: NER (V2 RoBERTa + spaCy Hybrid)
+# =============================================================================
+ner:
+  v2:
+    model_path: "../out/original_model/named_entity_recognition.pt"
+    model_type: "RobertaForTokenClassification"
+    model_size_mb: 473
+    labels: ["COM", "FUL"]  # Common name, Full name
+    batch_size: 8
+    device: "cuda"
+    max_length: 512
+    expected_papers: 18319
+    expected_entities: 67187
+    output_file: "data/phase2_ner/v2_ner_results.csv"
+
+  spacy:
+    model_path: "../spacy_hybrid_ner/models/ner_hybrid_v2_com_ful"
+    components: ["entity_ruler", "tok2vec", "ner"]
+    entity_ruler_patterns: 6216
+    batch_size: 64
+    device: "cpu"  # CPU optimal for spaCy
+    speed: "100-200 papers/sec"
+    expected_papers: 32317
+    expected_entities: 117491
+    output_file: "data/phase2_ner/spacy_ner_results.csv"
+
+  union:
+    expected_total_papers: 34279
+    output_file: "data/phase2_ner/all_paper_pmids.txt"
+
+# =============================================================================
+# PHASE 3: LINGUISTIC FILTERING
+# =============================================================================
+linguistic:
+  features:
+    - "database_keyword"     # e.g., "database", "repository"
+    - "availability"         # "available at", "can be accessed"
+    - "first_person"         # "we developed", "our database"
+    - "present_tense"        # "is available", "contains"
+    - "version_number"       # "version 2.0", "v3.1"
+    - "download_mention"     # "download", "freely available"
+    - "url_present"          # URL in abstract
+
+  scoring:
+    high_score_threshold: 3      # ≥3 = introduction (high confidence)
+    low_score_threshold: 0       # <0 = usage paper (low confidence)
+
+  expected_outputs:
+    high_score: 8648    # ~25.2% introductions
+    medium_score: 20816  # ~60.7% medium confidence
+    low_score: 4796     # ~14.0% usage papers
+
+  output_files:
+    high: "data/phase3_linguistic/high_score_papers.csv"
+    medium: "data/phase3_linguistic/medium_score_papers.csv"
+    low: "data/phase3_linguistic/low_score_papers.csv"
+
+# =============================================================================
+# PHASE 4: SETFIT CLASSIFICATION
+# =============================================================================
+setfit:
+  model_path: "../advanced_paper_filtering/results/setfit_*/setfit_introduction_classifier/"
+  model_type: "SetFit (Sentence Transformers)"
+  training_examples: 40  # 20 intro, 20 usage
+  input_file: "data/phase3_linguistic/medium_score_papers.csv"
+  batch_size: 32
+  device: "cuda"
+  threshold: 0.5
+
+  expected_output:
+    introductions: 7800  # From 20,816 medium-score
+    total_with_linguistic: 16605  # High + SetFit
+
+  output_file: "data/phase4_setfit/setfit_introductions.csv"
+
+  # Note: Requires Google Colab for GPU inference
+  colab_notebook: "notebooks/phase4_setfit/setfit_inference_colab.ipynb"
+
+# =============================================================================
+# PHASE 5: ENTITY MAPPING & RESOURCE CREATION
+# =============================================================================
+mapping:
+  input_files:
+    linguistic_high: "data/phase3_linguistic/high_score_papers.csv"
+    setfit_results: "data/phase4_setfit/setfit_introductions.csv"
+    ner_results: "data/phase2_ner/"
+
+  quality_indicators:
+    - "db_keyword_found"      # Database keyword in text
+    - "entity_from_title"     # Entity mentioned in title
+    - "multiple_entities"     # Paper has >1 entity
+    - "has_url"               # URL extracted
+    - "high_confidence_ner"   # NER confidence >0.8
+
+  output_file: "data/phase5_mapping/papers_with_entities.csv"
+
+# =============================================================================
+# PHASE 6: URL SCANNING & VALIDATION
+# =============================================================================
+url_scanning:
+  scanner_version: "V4"
+  workers: 10
+  timeout: 30  # seconds
+  wayback_fallback: true
+
+  scoring:
+    domain_quality_weight: 0.4
+    content_quality_weight: 0.3
+    metadata_quality_weight: 0.3
+
+  output_file: "data/phase6_scanning/papers_with_url_scores.csv"
+
+  thresholds:
+    high_quality: 0.7
+    medium_quality: 0.4
+    low_quality: 0.0
+
+# =============================================================================
+# PHASE 7: DEDUPLICATION
+# =============================================================================
+deduplication:
+  url_similarity:
+    threshold: 0.8
+    method: "difflib.SequenceMatcher"
+
+  linguistic_similarity:
+    threshold: 0.85
+    features:
+      - "entity_name_match"
+      - "url_similarity"
+      - "same_paper"
+
+  manual_review:
+    unclear_cases_file: "data/phase7_deduplication/unclear_cases.csv"
+    manual_merges_file: "data/phase7_deduplication/manual_merges.csv"
+
+  expected_output:
+    unique_resources: 974
+
+  output_file: "data/phase7_deduplication/final_deduplicated_resources.csv"
+
+# =============================================================================
+# FILTERING PROFILES (Conservative / Balanced / Aggressive)
+# =============================================================================
+# These profiles control the filtering behavior during deduplication (Phase 7).
+# Papers can be included via:
+#   1. Keyword match: title contains one of the db_keywords
+#   2. Linguistic bypass: ling_score >= linguistic_bypass_threshold (bypasses keyword check)
+#
+# Run with: python run_pipeline.py --profiles all (default)
+#           python run_pipeline.py --profiles balanced
+#           python run_pipeline.py --profiles conservative,aggressive
+
+filtering_profiles:
+  conservative:
+    description: "High precision, minimize false positives"
+    db_keywords:
+      - database
+      - server
+      - portal
+      - repository
+      - archive
+      - atlas
+      - map
+    linguistic_bypass_threshold: 6  # Only very high ling_scores bypass keyword filter
+    setfit_threshold: 0.60
+    linguistic_high_threshold: 3
+    linguistic_low_threshold: 0
+    require_url: true
+
+  balanced:
+    description: "Recommended - good precision/recall balance"
+    db_keywords:
+      - database
+      - server
+      - portal
+      - repository
+      - archive
+      - atlas
+      - map
+      - bank
+      - wiki
+      - hub
+      - resource
+      - browser
+      - db      # catches *db names like orthodb, proteomicsdb
+      - base    # catches *base names like wormbase, pirbase
+    linguistic_bypass_threshold: 5  # Papers with ling_score >= 5 bypass keyword filter
+    setfit_threshold: 0.58
+    linguistic_high_threshold: 3
+    linguistic_low_threshold: 0
+    require_url: true
+
+  aggressive:
+    description: "Maximum recall, accepts more false positives"
+    db_keywords:
+      - database
+      - server
+      - portal
+      - repository
+      - archive
+      - atlas
+      - map
+      - bank
+      - wiki
+      - hub
+      - resource
+      - browser
+      - db
+      - base
+      - tool
+      - network
+      - collection
+      - catalog
+      - platform
+      - pedia    # catches *pedia names like vesiclepedia
+      - mine     # catches *mine names like planmine
+      - cyc      # catches *cyc names like metacyc
+    linguistic_bypass_threshold: 4  # More papers bypass keyword filter
+    setfit_threshold: 0.55
+    linguistic_high_threshold: 2
+    linguistic_low_threshold: -1
+    require_url: false
+
+# Default profile - set to aggressive for maximum recall (2022-mid2025 fresh run)
+default_profile: "aggressive"
+
+# =============================================================================
+# PHASE 8: BASELINE COMPARISON & VISUALIZATION (NEW 2025-11-26)
+# =============================================================================
+baseline_comparison:
+  baseline_file: "../data/final_inventory_2022.csv"
+  baseline_resources: 1948
+
+  # Dual-method matching
+  matching:
+    pmid_matching: true
+    entity_matching: true
+    entity_similarity_threshold: 0.85
+
+  # Multi-profile support
+  profiles_to_compare: ["conservative", "balanced", "aggressive"]
+
+  # Output files
+  output_dir: "data/phase8_baseline/"
+  report_file: "baseline_comparison_report.md"
+  stats_file: "baseline_comparison_stats.json"
+
+  # Visualization settings
+  visualizations:
+    enabled: true
+    output_dir: "data/phase8_baseline/visualizations/"
+    formats: ["png", "html"]
+    charts:
+      - "recovery_by_profile"
+      - "loss_categories"
+      - "precision_recall"
+      - "pmid_vs_entity_matching"
+
+# =============================================================================
+# PHASE 5b: ENTITY/URL DATA FIX (CRITICAL - Added 2025-11-26)
+# =============================================================================
+# Script 02b_update_set_c_with_entities.py fixes a data loss bug where
+# entity and URL data was not propagated to set_c_union.csv.
+# Impact: Recovers 1,247 baseline papers (94.9% of losses)
+entity_url_fix:
+  enabled: true
+  script: "scripts/phase5_mapping/02b_update_set_c_with_entities.py"
+  creates_backup: true
+  expected_recovery: 537  # Papers that now pass dedup criteria
+
+# =============================================================================
+# PERFORMANCE SETTINGS
+# =============================================================================
+performance:
+  phase1_time: "2-4 hours (GPU)"
+  phase2_time: "5-10 hours (GPU + CPU)"
+  phase3_time: "<1 minute"
+  phase4_time: "10-15 minutes (GPU)"
+  phase5_time: "5-10 minutes"
+  phase6_time: "75-90 minutes"
+  phase7_time: "5 minutes + manual"
+  phase8_time: "5-10 minutes"  # NEW: Baseline comparison
+  phase9_time: "5-10 minutes"  # NEW: Visualization
+  total_time: "8-16 hours"
+
+  hardware:
+    gpu_required: ["phase1", "phase2", "phase4"]
+    cpu_optimal: ["phase2_spacy", "phase3", "phase5", "phase6", "phase7", "phase8", "phase9"]
+    ram_minimum: "16GB"
+    storage: "10GB"
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+logging:
+  log_dir: "logs/pipeline"
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_rotation: true
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# =============================================================================
+# CHECKPOINT SETTINGS
+# =============================================================================
+checkpoint:
+  enabled: true
+  checkpoint_file: ".pipeline_checkpoint.json"
+  auto_save: true
+  save_after_each_phase: true
