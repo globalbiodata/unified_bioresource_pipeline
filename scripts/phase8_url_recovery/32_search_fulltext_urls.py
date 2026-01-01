@@ -10,7 +10,7 @@ Input:  - abstract_url_results.csv (from script 30)
         - fulltext_cache.json (from script 31)
 Output: fulltext_url_results.csv
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

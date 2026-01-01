@@ -11,7 +11,7 @@ Output: - resources_with_urls.csv (merged data)
         - missing_urls_for_recovery.csv (resources needing URL recovery)
         - pmids_for_url_recovery.txt (PMIDs to fetch abstracts for)
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-12-03
 """
 

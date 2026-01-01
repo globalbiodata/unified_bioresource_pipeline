@@ -31,7 +31,7 @@ Session Mode:
     - Outputs to: {session_dir}/06_scanning/papers_with_scanner_scores.csv
     - Stats to: {session_dir}/06_scanning/scanner_merge_statistics.txt
 
-Author: Pipeline Automation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-18
 Updated: 2025-12-04 (added session-dir support, argparse)
 """

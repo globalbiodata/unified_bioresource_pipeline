@@ -9,7 +9,7 @@ Input:  - Final inventory (from phase9)
         - Merged resources with original URLs (from script 28b)
 Output: Updated inventory with URL coverage stats
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-12-03
 """
 

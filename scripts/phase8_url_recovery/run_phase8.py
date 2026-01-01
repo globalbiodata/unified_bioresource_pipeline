@@ -23,7 +23,7 @@ Output:
     - still_missing.csv: Records that need web search
     - websearch_chunks/: Prepared files for agent web search
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

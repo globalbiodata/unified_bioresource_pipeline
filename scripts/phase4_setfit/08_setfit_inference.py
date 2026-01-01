@@ -23,7 +23,7 @@ Session Mode:
     - Model from: models/setfit_introduction_classifier/ (or --model-dir)
     - Outputs to: {session_dir}/04_setfit/
 
-Author: Pipeline Automation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-17
 Updated: 2025-12-04 (added session-dir support)
 """

@@ -9,7 +9,7 @@ Input:  Deduplicated bioresource inventory (from phase7)
 Output: - missing_urls_prepared.csv (records needing URL recovery)
         - pmids_list.txt (unique PMIDs to fetch)
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

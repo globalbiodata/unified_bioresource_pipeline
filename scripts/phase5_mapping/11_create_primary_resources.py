@@ -34,7 +34,7 @@ Session Mode:
     - Reads from: {session_dir}/input/papers_metadata.csv (title, abstract)
     - Outputs to: {session_dir}/05_mapping/union_papers_with_primary_resources.csv
 
-Author: Pipeline Automation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-18
 Updated: 2025-12-04 (added session-dir support, argparse, ner_union.csv integration)
 """

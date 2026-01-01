@@ -29,7 +29,7 @@ Session Mode:
     - Reads from: {session_dir}/input/classification_union.csv
     - Outputs to: {session_dir}/03_linguistic/
 
-Author: Pipeline Automation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-12-03
 Updated: 2025-12-04 (added session-dir support)
 """

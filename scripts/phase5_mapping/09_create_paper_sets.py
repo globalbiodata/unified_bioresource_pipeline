@@ -25,7 +25,7 @@ Session Mode:
     - Reads from: {session_dir}/04_setfit/setfit_classified_introductions.csv
     - Outputs to: {session_dir}/05_mapping/
 
-Author: Pipeline Automation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-18
 Updated: 2025-12-04 (added session-dir support, argparse)
 """

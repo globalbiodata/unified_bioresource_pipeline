@@ -24,7 +24,7 @@ Session Mode:
     - Reads from: {session_dir}/05_mapping/union_papers_with_urls.csv
     - Outputs to: {session_dir}/06_scanning/prepared_urls.csv
 
-Author: Pipeline Automation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-18
 Updated: 2025-12-04 (added session-dir support, argparse)
 """

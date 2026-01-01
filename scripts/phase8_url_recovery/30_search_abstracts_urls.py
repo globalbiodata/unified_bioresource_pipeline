@@ -9,7 +9,7 @@ Input:  - missing_urls_prepared.csv (from script 28)
         - abstracts_cache.json (from script 29)
 Output: abstract_url_results.csv
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

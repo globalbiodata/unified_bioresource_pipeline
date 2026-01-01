@@ -13,7 +13,7 @@ Stages:
     5. Search fulltext for URLs
     6. Consolidate results and prepare web search chunks
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

@@ -20,7 +20,7 @@ Output: - final_url_recovery.csv (filtered results)
         - excluded_urls.csv (URLs filtered out by rules)
         - url_recovery_summary.json (statistics)
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

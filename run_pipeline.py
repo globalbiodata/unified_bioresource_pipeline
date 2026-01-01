@@ -53,9 +53,8 @@ Usage:
     # Skip web search breakpoint
     python run_pipeline.py --session-id SESSION --skip-web-search
 
-Author: Pipeline Consolidation
-Date: 2025-12-04
-Version: 2.0.0 (Refactored for session-based execution)
+Author: Warren Emmett <warren.emmett@gmail.com>
+Version: 2.0.0
 """
 
 import argparse

@@ -5,7 +5,7 @@ URL Patterns and Exclusion Rules for URL Recovery
 Shared constants used across all URL recovery scripts.
 Based on lessons learned from url_recovery_v2 analysis.
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

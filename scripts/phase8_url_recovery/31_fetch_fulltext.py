@@ -9,7 +9,7 @@ Input:  - abstract_url_results.csv (from script 30)
         - abstracts_cache.json (for PMCID lookup)
 Output: fulltext_cache.json
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

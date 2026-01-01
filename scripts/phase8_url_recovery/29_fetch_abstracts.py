@@ -8,7 +8,7 @@ Purpose: Fetch abstracts and metadata for all PMIDs identified in script 28.
 Input:  pmids_list.txt (from script 28)
 Output: abstracts_cache.json
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

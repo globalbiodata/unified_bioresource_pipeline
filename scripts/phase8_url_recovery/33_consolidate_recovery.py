@@ -13,7 +13,7 @@ Output: - recovered_urls.csv (all found URLs)
         - websearch_chunks/chunk_XX.csv
         - websearch_chunks/AGENT_BRIEF.md
 
-Author: Pipeline Team
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-28
 """
 

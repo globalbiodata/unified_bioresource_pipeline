@@ -25,7 +25,7 @@ Session Mode:
     - Outputs to: {session_dir}/02_ner/ner_union.csv
     - Outputs to: {session_dir}/02_ner/ner_union_pmids.txt
 
-Author: Pipeline Consolidation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-20
 Updated: 2025-12-03 (added argparse, column auto-detection, entity CSV output)
 Updated: 2025-12-04 (added session-dir support)

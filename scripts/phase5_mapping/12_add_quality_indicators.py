@@ -26,7 +26,7 @@ Session Mode:
     - Outputs to: {session_dir}/05_mapping/union_papers_with_quality_indicators.csv
     - Statistics: {session_dir}/05_mapping/quality_indicators_statistics.txt
 
-Author: Pipeline Automation
+Author: Warren Emmett <warren.emmett@gmail.com>
 Date: 2025-11-18
 Updated: 2025-12-04 (added session-dir support, argparse)
 """
